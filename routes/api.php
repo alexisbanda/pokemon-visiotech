@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\BattleController;
 use App\Http\Controllers\MoveController;
 use App\Http\Controllers\MyPokemonController;
 use App\Http\Controllers\PokemonController;
@@ -20,3 +21,8 @@ Route::apiResource('pokemon', PokemonController::class);
 Route::apiResource('moves', MoveController::class);
 Route::apiResource('my-pokemon', MyPokemonController::class)
     ->parameter('my-pokemon', 'myPokemon');
+
+// --- API de combate (Parte 3) ---
+Route::post('battles', [BattleController::class, 'store']);
+Route::get('battles/{battle}', [BattleController::class, 'show']);
+Route::post('battles/{battle}/turns', [BattleController::class, 'turns']);
