@@ -37,6 +37,16 @@ class MyPokemon extends Model
     }
 
     /**
+     * PS máximos al nivel actual (fórmula estándar de PS de la saga). Se usan
+     * para inicializar el combate; sin escalar al nivel, el daño del enunciado
+     * dejaría las peleas en uno o dos golpes.
+     */
+    public function maxHp(): int
+    {
+        return (int) floor(2 * $this->pokemon->hp * $this->level / 100) + $this->level + 10;
+    }
+
+    /**
      * Especie base de la que hereda stats y tipo.
      *
      * @return BelongsTo<Pokemon, $this>

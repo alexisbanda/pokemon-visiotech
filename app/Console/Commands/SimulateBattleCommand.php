@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Domain\Combat\Random\RandomFactor;
+use App\Enums\BattleSide;
 use App\Models\Move;
 use App\Models\MyPokemon;
 use App\Services\Combat\BattleRenderer;
@@ -70,12 +71,21 @@ class SimulateBattleCommand extends Command
 
         $renderer->header($battle, $seed !== null ? (int) $seed : null);
 
+        // En modo interactivo controlas el primer combatiente; la CPU juega el otro.
         $interactive = (bool) $this->option('interactive');
-        $delay = ! $this->option('no-delay');
+        if ($interactive) {
+            $this->line("  <fg=cyan>Controlas a {$first->nickname}.</> La CPU juega con {$second->nickname}.");
+            $this->newLine();
+        }
+
+        $delay = ! $this->option('no-delay') && ! $interactive;
 
         while (! $battle->isFinished()) {
-            $attacker = $battle->combatantOn($battle->turn);
-            $move = $this->chooseMove($attacker, $interactive);
+            $side = $battle->turn;
+            $attacker = $battle->combatantOn($side);
+            $humanTurn = $interactive && $side === BattleSide::First;
+
+            $move = $humanTurn ? $this->promptMove($attacker) : $this->randomMove($attacker);
 
             $turn = $service->takeTurn($battle, $move);
             $renderer->turn($battle, $turn, $move->name);
@@ -90,20 +100,23 @@ class SimulateBattleCommand extends Command
         return self::SUCCESS;
     }
 
-    private function chooseMove(MyPokemon $attacker, bool $interactive): Move
+    /**
+     * Elección automática (CPU): movimiento al azar. Usa mt_rand (no random_int)
+     * sobre una lista ordenada por id para respetar la semilla de --seed.
+     */
+    private function randomMove(MyPokemon $attacker): Move
     {
-        if (! $interactive) {
-            // mt_rand (no random_int) para respetar la semilla de --seed; sobre
-            // una lista ordenada por id para que el orden sea estable.
-            $moves = $attacker->moves->sortBy('id')->values();
+        $moves = $attacker->moves->sortBy('id')->values();
 
-            return $moves[mt_rand(0, $moves->count() - 1)];
-        }
+        return $moves[mt_rand(0, $moves->count() - 1)];
+    }
 
+    private function promptMove(MyPokemon $attacker): Move
+    {
         $choice = select(
-            label: "Turno de {$attacker->nickname} — elige movimiento",
+            label: "▶ Tu turno ({$attacker->nickname}) — elige movimiento",
             options: $attacker->moves
-                ->mapWithKeys(fn (Move $m) => [$m->id => "{$m->name} ({$m->type->value}, poder {$m->power})"])
+                ->mapWithKeys(fn (Move $m) => [$m->id => "{$m->name}  ({$m->type->value}, poder {$m->power})"])
                 ->all(),
         );
 

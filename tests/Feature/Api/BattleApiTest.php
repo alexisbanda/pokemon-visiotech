@@ -57,7 +57,8 @@ final class BattleApiTest extends TestCase
             ->assertCreated()
             ->assertJsonPath('data.status', 'in_progress')
             ->assertJsonPath('data.turn', 'second') // el rápido
-            ->assertJsonPath('data.combatants.first.current_hp', 100);
+            ->assertJsonPath('data.combatants.first.current_hp', $slow->maxHp()) // hp 100 → 160 a nivel 50
+            ->assertJsonPath('data.combatants.first.max_hp', 160);
     }
 
     public function test_create_rejects_same_pokemon_on_both_sides(): void
@@ -117,7 +118,7 @@ final class BattleApiTest extends TestCase
 
         $this->postJson("/api/battles/{$id}/turns", ['move_id' => $attacker->moves->first()->id])
             ->assertOk()
-            ->assertJsonPath('data.combatants.second.current_hp', 60) // 200 - 140
+            ->assertJsonPath('data.combatants.second.current_hp', $defender->maxHp() - 140) // 260 - 140 = 120
             ->assertJsonPath('data.turn', 'second')
             ->assertJsonPath('data.turns.0.damage', 140);
     }

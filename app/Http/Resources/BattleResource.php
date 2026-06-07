@@ -49,7 +49,7 @@ class BattleResource extends JsonResource
             'species' => $myPokemon->pokemon->name,
             'type' => $myPokemon->pokemon->type->value,
             'level' => $myPokemon->level,
-            'max_hp' => $myPokemon->pokemon->hp,
+            'max_hp' => $myPokemon->maxHp(),
             'current_hp' => $this->currentHp($side),
             'fainted' => $this->currentHp($side) <= 0,
         ];

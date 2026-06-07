@@ -40,8 +40,8 @@ final class BattleService
         return Battle::create([
             'first_my_pokemon_id' => $first->id,
             'second_my_pokemon_id' => $second->id,
-            'first_current_hp' => $first->pokemon->hp,
-            'second_current_hp' => $second->pokemon->hp,
+            'first_current_hp' => $first->maxHp(),
+            'second_current_hp' => $second->maxHp(),
             'turn' => $turn,
             'status' => BattleStatus::InProgress,
             'turn_number' => 0,

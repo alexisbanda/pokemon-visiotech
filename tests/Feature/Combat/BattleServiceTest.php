@@ -79,15 +79,18 @@ final class BattleServiceTest extends TestCase
         $this->assertSame(BattleSide::First, $this->service()->create($a, $b)->turn);
     }
 
-    public function test_create_initializes_hp_from_species(): void
+    public function test_create_initializes_hp_at_level(): void
     {
         $a = $this->makeMyPokemon($this->stats(['hp' => 78]), PokemonType::Fire);
         $b = $this->makeMyPokemon($this->stats(['hp' => 120]), PokemonType::Water);
 
         $battle = $this->service()->create($a, $b);
 
-        $this->assertSame(78, $battle->first_current_hp);
-        $this->assertSame(120, $battle->second_current_hp);
+        // PS = floor(2*base*nivel/100) + nivel + 10  (nivel 50)
+        $this->assertSame($a->maxHp(), $battle->first_current_hp);
+        $this->assertSame($b->maxHp(), $battle->second_current_hp);
+        $this->assertSame(138, $battle->first_current_hp);  // 78 → 78 + 60
+        $this->assertSame(180, $battle->second_current_hp); // 120 → 120 + 60
     }
 
     public function test_turn_applies_super_effective_damage_and_flips_turn(): void
@@ -111,7 +114,9 @@ final class BattleServiceTest extends TestCase
         $this->assertSame('super effective', $turn->label);
 
         $battle->refresh();
-        $this->assertSame(60, $battle->second_current_hp); // 200 - 140
+        // defensor: hp base 200 → maxHp 260; tras 140 de daño → 120
+        $this->assertSame($defender->maxHp() - 140, $battle->second_current_hp);
+        $this->assertSame(120, $battle->second_current_hp);
         $this->assertSame(BattleSide::Second, $battle->turn); // pasa al defensor
         $this->assertSame(BattleStatus::InProgress, $battle->status);
     }
