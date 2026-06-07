@@ -153,6 +153,7 @@ el combate dure varios turnos.
 
 ```bash
 sail artisan battle:simulate <idA> <idB> [opciones]
+sail artisan battle:simulate                 # sin ids: eliges los combatientes en un menú
 ```
 
 | Opción | Efecto |

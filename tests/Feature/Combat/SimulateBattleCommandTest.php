@@ -63,6 +63,23 @@ final class SimulateBattleCommandTest extends TestCase
         ]);
     }
 
+    public function test_selects_combatants_from_a_menu_when_ids_are_omitted(): void
+    {
+        // Tres combatientes tipo Normal con un golpe Normal: siempre se hacen
+        // daño (×1), así que la batalla termina sin riesgo de bucle.
+        $normalMove = ['name' => 'Pound', 'power' => 100, 'type' => PokemonType::Normal];
+        $a = $this->makeMyPokemon(['attack' => 120, 'defense' => 40, 'hp' => 60], PokemonType::Normal, [$normalMove]);
+        $b = $this->makeMyPokemon(['attack' => 120, 'defense' => 40, 'hp' => 60], PokemonType::Normal, [$normalMove]);
+        $this->makeMyPokemon(['attack' => 120, 'defense' => 40, 'hp' => 60], PokemonType::Normal, [$normalMove]);
+
+        $this->artisan('battle:simulate', ['--no-delay' => true, '--ascii' => true])
+            ->expectsQuestion('Elige el primer combatiente', $a->id)
+            ->expectsQuestion('Elige el rival', $b->id)
+            ->assertExitCode(0);
+
+        $this->assertDatabaseCount('battles', 1);
+    }
+
     public function test_fails_when_a_combatant_does_not_exist(): void
     {
         $existing = $this->makeMyPokemon([], PokemonType::Water, [['name' => 'Surf', 'power' => 90, 'type' => PokemonType::Water]]);

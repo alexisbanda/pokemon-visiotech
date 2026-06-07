@@ -18,8 +18,8 @@ use function Laravel\Prompts\select;
 class SimulateBattleCommand extends Command
 {
     protected $signature = 'battle:simulate
-        {first : Id del MyPokemon que pelea en primer lugar}
-        {second : Id del MyPokemon rival}
+        {first? : Id del MyPokemon que pelea en primer lugar (si se omite, lo eliges en un menú)}
+        {second? : Id del MyPokemon rival (si se omite, lo eliges en un menú)}
         {--seed= : Semilla para un combate reproducible}
         {--interactive : Elegir los movimientos a mano}
         {--no-delay : Sin pausa entre turnos (CI/tests)}
@@ -29,12 +29,13 @@ class SimulateBattleCommand extends Command
 
     public function handle(): int
     {
-        $first = MyPokemon::with(['pokemon', 'moves'])->find($this->argument('first'));
-        $second = MyPokemon::with(['pokemon', 'moves'])->find($this->argument('second'));
+        $first = $this->resolveCombatant($this->argument('first'), 'Elige el primer combatiente', null);
+        if ($first === null) {
+            return self::FAILURE;
+        }
 
-        if ($first === null || $second === null) {
-            $this->error('Alguno de los MyPokemon indicados no existe.');
-
+        $second = $this->resolveCombatant($this->argument('second'), 'Elige el rival', $first->id);
+        if ($second === null) {
             return self::FAILURE;
         }
 
@@ -79,8 +80,9 @@ class SimulateBattleCommand extends Command
         }
 
         $delay = ! $this->option('no-delay') && ! $interactive;
+        $maxTurns = 500; // salvaguarda: evita un bucle infinito si nadie hace daño
 
-        while (! $battle->isFinished()) {
+        while (! $battle->isFinished() && $battle->turn_number < $maxTurns) {
             $side = $battle->turn;
             $attacker = $battle->combatantOn($side);
             $humanTurn = $interactive && $side === BattleSide::First;
@@ -95,9 +97,55 @@ class SimulateBattleCommand extends Command
             }
         }
 
+        if (! $battle->isFinished()) {
+            $this->warn("  El combate no terminó en {$maxTurns} turnos (ningún bando logró debilitar al otro).");
+
+            return self::SUCCESS;
+        }
+
         $renderer->result($battle->load('winner'));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Resuelve un combatiente: por id si se pasó como argumento, o con un menú
+     * de selección si se omitió. `$excludeId` evita ofrecer el ya elegido.
+     */
+    private function resolveCombatant(int|string|null $id, string $label, ?int $excludeId): ?MyPokemon
+    {
+        if ($id !== null) {
+            $myPokemon = MyPokemon::with(['pokemon', 'moves'])->find($id);
+
+            if ($myPokemon === null) {
+                $this->error("No existe ningún MyPokemon con id {$id}.");
+            }
+
+            return $myPokemon;
+        }
+
+        $candidates = MyPokemon::with('pokemon')
+            ->when($excludeId, fn ($query) => $query->whereKeyNot($excludeId))
+            ->orderBy('nickname')
+            ->get();
+
+        if ($candidates->isEmpty()) {
+            $this->error('No hay MyPokemon disponibles. Ejecuta «artisan migrate --seed».');
+
+            return null;
+        }
+
+        $options = $candidates
+            ->mapWithKeys(fn (MyPokemon $m) => [$m->id => "{$m->nickname} — {$m->pokemon->name} (Lv{$m->level})"])
+            ->all();
+
+        $choice = $this->choice($label, $options);
+
+        // choice() puede devolver la clave (id) o la etiqueta según la versión;
+        // resolvemos el id de ambos modos.
+        $id = array_key_exists($choice, $options) ? $choice : array_search($choice, $options, true);
+
+        return MyPokemon::with(['pokemon', 'moves'])->find((int) $id);
     }
 
     /**
