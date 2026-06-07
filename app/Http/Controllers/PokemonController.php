@@ -8,6 +8,7 @@ use App\Http\Requests\StorePokemonRequest;
 use App\Http\Requests\UpdatePokemonRequest;
 use App\Http\Resources\MoveResource;
 use App\Http\Resources\PokemonResource;
+use App\Models\Move;
 use App\Models\Pokemon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -54,5 +55,16 @@ class PokemonController extends Controller
     public function moves(Pokemon $pokemon): AnonymousResourceCollection
     {
         return MoveResource::collection($pokemon->moves()->orderBy('name')->get());
+    }
+
+    /**
+     * Consulta: movimientos cuyo tipo coincide con el del Pokémon
+     * (la relación movimientos → tipo → Pokémon del enunciado).
+     */
+    public function movesByType(Pokemon $pokemon): AnonymousResourceCollection
+    {
+        return MoveResource::collection(
+            Move::query()->where('type', $pokemon->type)->orderBy('name')->get(),
+        );
     }
 }

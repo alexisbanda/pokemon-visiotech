@@ -9,6 +9,8 @@ use App\Http\Controllers\PokemonController;
 use Illuminate\Support\Facades\Route;
 
 // --- Consultas relacionales (Parte 2) ---
+// Movimientos cuyo tipo coincide con el del Pokémon (relación movimientos→tipo→Pokémon).
+Route::get('pokemon/{pokemon}/moves-by-type', [PokemonController::class, 'movesByType']);
 // Movimientos posibles (aprendibles) de un Pokémon base.
 Route::get('pokemon/{pokemon}/moves', [PokemonController::class, 'moves']);
 // Movimientos equipados de una instancia capturada.

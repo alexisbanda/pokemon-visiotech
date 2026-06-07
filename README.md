@@ -121,13 +121,14 @@ probar en `docs/api.http` (extensión REST Client de VSCode).
 | `GET/POST` | `/my-pokemon` | Listar / crear instancias (máx. 4 movimientos) |
 | `GET/PUT/PATCH/DELETE` | `/my-pokemon/{id}` | Ver / actualizar / borrar |
 
-**Las 3 consultas relacionales:**
+**Las 3 consultas relacionales del enunciado** (+ una extra):
 
-| Consulta | Ruta |
+| Consulta (enunciado) | Ruta |
 |---|---|
-| Movimientos **posibles** (aprendibles) de un Pokémon | `GET /pokemon/{id}/moves` |
-| Movimientos **equipados** de una instancia | `GET /my-pokemon/{id}/moves` |
-| Especies que **comparten** un movimiento | `GET /moves/{id}/pokemon` |
+| 1 — Movimientos de un Pokémon por **tipo** (relación movimientos → tipo → Pokémon) | `GET /pokemon/{id}/moves-by-type` |
+| 2 — Movimientos **posibles** (aprendibles) de un Pokémon | `GET /pokemon/{id}/moves` |
+| 3 — Pokémon que **comparten** un movimiento | `GET /moves/{id}/pokemon` |
+| _(extra)_ Movimientos **equipados** de una instancia | `GET /my-pokemon/{id}/moves` |
 
 ### Combate (Parte 3)
 

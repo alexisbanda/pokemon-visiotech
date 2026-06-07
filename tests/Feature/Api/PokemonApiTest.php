@@ -107,4 +107,16 @@ final class PokemonApiTest extends TestCase
             ->assertJsonCount(2, 'data')
             ->assertJsonMissing(['id' => $other->id]);
     }
+
+    public function test_moves_by_type_endpoint_returns_moves_of_the_pokemons_type(): void
+    {
+        $pokemon = Pokemon::factory()->create(['type' => 'fire']);
+        Move::factory()->count(2)->create(['type' => 'fire']);
+        $water = Move::factory()->create(['type' => 'water']);
+
+        $this->getJson("/api/pokemon/{$pokemon->id}/moves-by-type")
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonMissing(['id' => $water->id]);
+    }
 }

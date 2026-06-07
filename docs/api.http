@@ -105,16 +105,20 @@ Content-Type: {{json}}
 
 # ── Las 3 consultas relacionales ──
 
-### (1) Movimientos POSIBLES (aprendibles) de un Pokémon
-GET {{baseUrl}}/pokemon/1/moves
+### (1) Movimientos de un Pokémon por TIPO (relación movimientos → tipo → Pokémon)
+GET {{baseUrl}}/pokemon/1/moves-by-type
 Accept: {{json}}
 
-### (2) Movimientos EQUIPADOS de una instancia
-GET {{baseUrl}}/my-pokemon/3/moves
+### (2) Movimientos POSIBLES (aprendibles) de un Pokémon
+GET {{baseUrl}}/pokemon/1/moves
 Accept: {{json}}
 
 ### (3) Especies que COMPARTEN un movimiento (Earthquake = 16)
 GET {{baseUrl}}/moves/16/pokemon
+Accept: {{json}}
+
+### (extra) Movimientos EQUIPADOS de una instancia
+GET {{baseUrl}}/my-pokemon/3/moves
 Accept: {{json}}
 
 
