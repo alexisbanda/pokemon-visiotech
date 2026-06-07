@@ -1,0 +1,172 @@
+### Pokémon Challenge — colección de API
+### Extensión recomendada: "REST Client" (humao.rest-client) en VSCode.
+### Pulsa "Send Request" sobre cada bloque. Requiere `sail up -d` y `migrate --seed`.
+
+@baseUrl = http://localhost/api
+@json = application/json
+
+### Ids de ejemplo tras `migrate --seed`:
+###   Pokémon:   1 Charizard · 2 Blastoise · 3 Venusaur · 4 Pikachu · 5 Gengar · 6 Machamp · 7 Dragonite · 8 Snorlax
+###   MyPokemon: 1 Reptcomputer (Charizard) · 2 Shellshock (Blastoise) · 3 Sparky (Pikachu)
+###   Movimientos: 2 Body Slam · 5 Flamethrower · 8 Hydro Pump · 9 Thunderbolt · 13 Ice Beam · 16 Earthquake · 19 Dragon Claw
+
+
+# ────────────────────────────────────────────────────────────────
+# PARTE 2 — POKÉDEX
+# ────────────────────────────────────────────────────────────────
+
+### Listar Pokémon (paginado)
+GET {{baseUrl}}/pokemon
+Accept: {{json}}
+
+### Ver un Pokémon (con sus movimientos posibles)
+GET {{baseUrl}}/pokemon/1
+Accept: {{json}}
+
+### Crear un Pokémon → 201
+POST {{baseUrl}}/pokemon
+Accept: {{json}}
+Content-Type: {{json}}
+
+{
+  "name": "Eevee",
+  "type": "normal",
+  "hp": 55, "attack": 55, "defense": 50,
+  "sp_attack": 45, "sp_defense": 65, "speed": 55
+}
+
+### Crear con tipo inválido → 422
+POST {{baseUrl}}/pokemon
+Accept: {{json}}
+Content-Type: {{json}}
+
+{ "name": "Bad", "type": "plasma" }
+
+### Actualizar un Pokémon (PATCH parcial)
+PATCH {{baseUrl}}/pokemon/1
+Accept: {{json}}
+Content-Type: {{json}}
+
+{ "attack": 120 }
+
+### Borrar un Pokémon → 204
+DELETE {{baseUrl}}/pokemon/8
+Accept: {{json}}
+
+
+### Listar movimientos
+GET {{baseUrl}}/moves?per_page=50
+Accept: {{json}}
+
+### Crear un movimiento → 201
+POST {{baseUrl}}/moves
+Accept: {{json}}
+Content-Type: {{json}}
+
+{ "name": "Aeroblast", "power": 100, "type": "flying" }
+
+
+### Listar instancias (MyPokemon) con especie y movimientos
+GET {{baseUrl}}/my-pokemon
+Accept: {{json}}
+
+### Ver una instancia
+GET {{baseUrl}}/my-pokemon/1
+Accept: {{json}}
+
+### Crear instancia con hasta 4 movimientos → 201
+### (los movimientos deben ser aprendibles por la especie; Gengar = 5)
+POST {{baseUrl}}/my-pokemon
+Accept: {{json}}
+Content-Type: {{json}}
+
+{
+  "pokemon_id": 5,
+  "nickname": "Spooky",
+  "level": 50,
+  "moves": [18, 17, 9, 15]
+}
+
+### Validación: más de 4 movimientos → 422
+POST {{baseUrl}}/my-pokemon
+Accept: {{json}}
+Content-Type: {{json}}
+
+{ "pokemon_id": 5, "nickname": "TooMany", "level": 50, "moves": [18, 17, 9, 15, 16] }
+
+### Validación: movimiento no aprendible por la especie → 422
+### (Surf = 7 no es de Gengar)
+POST {{baseUrl}}/my-pokemon
+Accept: {{json}}
+Content-Type: {{json}}
+
+{ "pokemon_id": 5, "nickname": "Cheater", "level": 50, "moves": [7] }
+
+
+# ── Las 3 consultas relacionales ──
+
+### (1) Movimientos POSIBLES (aprendibles) de un Pokémon
+GET {{baseUrl}}/pokemon/1/moves
+Accept: {{json}}
+
+### (2) Movimientos EQUIPADOS de una instancia
+GET {{baseUrl}}/my-pokemon/3/moves
+Accept: {{json}}
+
+### (3) Especies que COMPARTEN un movimiento (Earthquake = 16)
+GET {{baseUrl}}/moves/16/pokemon
+Accept: {{json}}
+
+
+# ────────────────────────────────────────────────────────────────
+# PARTE 3 — COMBATE
+# ────────────────────────────────────────────────────────────────
+
+### Crear un combate (Sparky #3 vs Shellshock #2) → 201
+### Guarda el `id` de la respuesta y úsalo abajo.
+# @name createBattle
+POST {{baseUrl}}/battles
+Accept: {{json}}
+Content-Type: {{json}}
+
+{ "first_my_pokemon_id": 3, "second_my_pokemon_id": 2 }
+
+### Ver el estado del combate recién creado (+ log de turnos)
+@battleId = {{createBattle.response.body.data.id}}
+GET {{baseUrl}}/battles/{{battleId}}
+Accept: {{json}}
+
+### Jugar un turno — Sparky usa Thunderbolt (#9, supereficaz vs agua) → 200
+POST {{baseUrl}}/battles/{{battleId}}/turns
+Accept: {{json}}
+Content-Type: {{json}}
+
+{ "move_id": 9 }
+
+### Turno del rival — Shellshock usa Hydro Pump (#8) → 200
+POST {{baseUrl}}/battles/{{battleId}}/turns
+Accept: {{json}}
+Content-Type: {{json}}
+
+{ "move_id": 8 }
+
+
+# ── Casos de error ──
+
+### Mismo Pokémon en ambos lados → 422
+POST {{baseUrl}}/battles
+Accept: {{json}}
+Content-Type: {{json}}
+
+{ "first_my_pokemon_id": 3, "second_my_pokemon_id": 3 }
+
+### Movimiento que no es del atacante de turno → 422
+POST {{baseUrl}}/battles/{{battleId}}/turns
+Accept: {{json}}
+Content-Type: {{json}}
+
+{ "move_id": 16 }
+
+### Combate inexistente → 404
+GET {{baseUrl}}/battles/999
+Accept: {{json}}

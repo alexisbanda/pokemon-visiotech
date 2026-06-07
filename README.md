@@ -1,58 +1,190 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Pokémon Challenge — Visiotech
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema de combate Pokémon en **PHP 8.4 + Laravel 13**, resuelto en 3 partes
+incrementales:
 
-## About Laravel
+1. **Dominio de combate** — cálculo de daño en PHP puro (sin Laravel), con tabla
+   de efectividad de los 18 tipos y factor aleatorio inyectable.
+2. **API Pokédex** — CRUD de Pokémon, movimientos e instancias (`MyPokemon`, máx.
+   4 movimientos), relaciones N:N y 3 consultas relacionales.
+3. **API de combate** — máquina de estados de una partida por turnos, más un
+   comando de consola `battle:simulate` que juega y narra el combate.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+No hay frontend: **la suite de tests es la demostración** y el comando
+`battle:simulate` es la demo visual.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Stack
 
-## Learning Laravel
+- PHP 8.4 · Laravel 13 (Framework 13.14)
+- **Laravel Sail** (Docker) con **MySQL 8.4**
+- Tests: PHPUnit · Estilo: Laravel Pint (PSR-12)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Requisitos
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- Docker y Docker Compose
+- (Opcional) PHP 8.4 y Composer en local para el primer `composer install`
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Arranque
 
 ```bash
-composer require laravel/boost --dev
+# 1. Dependencias
+composer install
 
-php artisan boost:install
+# 2. Entorno
+cp .env.example .env
+
+# 3. Levantar contenedores (app en :80, MySQL en :3306)
+./vendor/bin/sail up -d
+
+# 4. Clave de app + base de datos con datos de ejemplo
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan migrate --seed
+
+# 5. Comprobar que todo está en verde
+./vendor/bin/sail test
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+> Alias recomendado: `alias sail='./vendor/bin/sail'`.
 
-## Contributing
+La API queda servida en `http://localhost/api`.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Comandos útiles
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+sail test                       # suite completa (Unit + Feature)
+sail test tests/Unit/Domain     # solo el dominio de combate (Parte 1)
+sail artisan migrate:fresh --seed   # recrear BD con datos de ejemplo
+./vendor/bin/pint               # formatear a PSR-12
 
-## Security Vulnerabilities
+# Simular un combate (Parte 3)
+sail artisan battle:simulate 1 2                 # Charizard vs Blastoise (auto)
+sail artisan battle:simulate 1 2 --seed=3        # reproducible
+sail artisan battle:simulate 1 2 --interactive   # tú vs CPU
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## Arquitectura
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```
+app/
+├─ Domain/Combat/         # Parte 1 — PHP PURO, sin dependencias de Laravel
+│  ├─ PokemonType.php      #   enum de los 18 tipos
+│  ├─ TypeChart.php        #   tabla de efectividad (lookup, incl. 8 inmunidades)
+│  ├─ Stats / Move / Combatant / DamageResult
+│  ├─ DamageCalculator.php #   fórmula de daño del enunciado
+│  └─ Random/              #   RandomFactor (interfaz) + Standard / Fixed
+├─ Models/                # Parte 2/3 — Eloquent (Pokemon, Move, MyPokemon, Battle…)
+├─ Http/                  # Parte 2/3 — Controllers finos, Form Requests, API Resources
+├─ Services/Combat/       # Parte 3 — BattleService + puente Eloquent↔dominio + renderer
+├─ Console/Commands/      # Parte 3 — battle:simulate
+└─ Enums/                 # BattleStatus, BattleSide
+```
+
+**Principio clave:** `app/Domain/Combat/` no importa `Illuminate\…` jamás. El
+motor de daño de la Parte 1 se reutiliza intacto en la API y en el comando de la
+Parte 3, traducido desde Eloquent por un `CombatantAssembler`.
+
+### Fórmula de daño (fiel al enunciado)
+
+```
+base   = floor( (2 · nivel / 5 + 2) · ataque · poder / defensa / 50 )
+daño   = floor( base · efectividad · aleatorio / 100 )
+```
+
+El factor `aleatorio` (85–100) se inyecta tras la interfaz `RandomFactor`, de modo
+que los tests son deterministas (`FixedRandomFactor`) y la producción es aleatoria
+(`StandardRandomFactor`).
+
+---
+
+## API
+
+Base: `http://localhost/api`. Todas las respuestas usan **API Resources**; los
+errores siguen la semántica HTTP (201/204/404/422/409). Colección lista para
+probar en `docs/api.http` (extensión REST Client de VSCode).
+
+### Pokédex (Parte 2)
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET/POST` | `/pokemon` | Listar / crear Pokémon base |
+| `GET/PUT/PATCH/DELETE` | `/pokemon/{id}` | Ver / actualizar / borrar |
+| `GET/POST` | `/moves` | Listar / crear movimientos |
+| `GET/PUT/PATCH/DELETE` | `/moves/{id}` | Ver / actualizar / borrar |
+| `GET/POST` | `/my-pokemon` | Listar / crear instancias (máx. 4 movimientos) |
+| `GET/PUT/PATCH/DELETE` | `/my-pokemon/{id}` | Ver / actualizar / borrar |
+
+**Las 3 consultas relacionales:**
+
+| Consulta | Ruta |
+|---|---|
+| Movimientos **posibles** (aprendibles) de un Pokémon | `GET /pokemon/{id}/moves` |
+| Movimientos **equipados** de una instancia | `GET /my-pokemon/{id}/moves` |
+| Especies que **comparten** un movimiento | `GET /moves/{id}/pokemon` |
+
+### Combate (Parte 3)
+
+| Método | Ruta | Descripción | Códigos |
+|---|---|---|---|
+| `POST` | `/battles` | Crear combate entre 2 `MyPokemon` | 201 · 422 |
+| `GET` | `/battles/{id}` | Estado actual + log de turnos | 200 · 404 |
+| `POST` | `/battles/{id}/turns` | Jugar un turno (`move_id`) | 200 · 409 · 422 |
+
+Reglas: ataca primero el de mayor **Velocidad** (empate → el primero, de forma
+determinista); cada turno aplica el `DamageCalculator`, resta PS y comprueba la
+derrota (PS ≤ 0); pedir turno en un combate terminado devuelve **409**; un
+movimiento que no pertenece al atacante devuelve **422**.
+
+---
+
+## `battle:simulate`
+
+Juega un combate completo entre dos `MyPokemon` y narra cada turno con el
+marcador (ambas barras de PS) y avisos de efectividad. Reutiliza el mismo
+`BattleService` que la API. Los PS se inicializan **escalados al nivel** para que
+el combate dure varios turnos.
+
+```bash
+sail artisan battle:simulate <idA> <idB> [opciones]
+```
+
+| Opción | Efecto |
+|---|---|
+| `--seed=N` | Combate **reproducible** (mismo resultado siempre) |
+| `--interactive` | **Tú vs CPU**: controlas el primer combatiente, la CPU el otro |
+| `--no-delay` | Sin pausa entre turnos (CI/tests) |
+| `--ascii` | Salida sin emojis |
+
+> La duración depende del enfrentamiento: dos Pokémon resistentes y sin ventaja
+> de tipo dan combates largos; un golpe supereficaz contra un Pokémon frágil
+> puede acabar en pocos turnos (igual que en el juego real).
+
+---
+
+## Tests
+
+```bash
+sail test            # 49 tests · Unit (dominio) + Feature (API y combate)
+```
+
+- **Unit** (`tests/Unit/Domain/Combat`): tabla de efectividad y fórmula de daño,
+  deterministas con `FixedRandomFactor`.
+- **Feature** (`tests/Feature`): CRUD y consultas de la Pokédex, y combate
+  (orden por velocidad, fin por PS ≤ 0, transiciones inválidas 409/422).
+
+---
+
+## Datos de ejemplo (seeders)
+
+8 Pokémon reales (Charizard, Blastoise, Venusaur, Pikachu, Gengar, Machamp,
+Dragonite, Snorlax), 20 movimientos y 3 instancias listas para combatir
+(`Reptcomputer`, `Shellshock`, `Sparky`). Varios movimientos se comparten entre
+especies para que la consulta de "Pokémon que comparten un movimiento" devuelva
+resultados.
