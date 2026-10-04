@@ -163,4 +163,29 @@ final class PokemonApiTest extends TestCase
             ->assertJsonCount(2, 'data')
             ->assertJsonMissing(['id' => $water->id]);
     }
+
+    public function test_weaknesses_endpoint_returns_fire_weaknesses_ordered_alphabetically(): void
+    {
+        $pokemon = Pokemon::factory()->create(['type' => 'fire']);
+
+        $this->getJson("/api/pokemon/{$pokemon->id}/weaknesses")
+            ->assertOk()
+            ->assertJsonPath('data.type', 'fire')
+            ->assertJsonPath('data.weaknesses', ['ground', 'rock', 'water']);
+    }
+
+    public function test_weaknesses_endpoint_returns_normal_weaknesses(): void
+    {
+        $pokemon = Pokemon::factory()->create(['type' => 'normal']);
+
+        $this->getJson("/api/pokemon/{$pokemon->id}/weaknesses")
+            ->assertOk()
+            ->assertJsonPath('data.type', 'normal')
+            ->assertJsonPath('data.weaknesses', ['fighting']);
+    }
+
+    public function test_weaknesses_endpoint_unknown_pokemon_returns_404(): void
+    {
+        $this->getJson('/api/pokemon/999/weaknesses')->assertNotFound();
+    }
 }
