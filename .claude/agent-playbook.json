@@ -17,7 +17,8 @@
   },
   "environment": {
     "dev_url": "",
-    "test_command": "php artisan test",
+    "test_command": "./vendor/bin/sail test",
+    "worktree_test_command": "WWWUSER=$(id -u) WWWGROUP=$(id -g) docker compose run --rm --no-deps -v {worktree}:/var/www/html -v $PWD/vendor:/var/www/html/vendor -v $PWD/.env:/var/www/html/.env laravel.test php artisan test",
     "deploy_check": ""
   },
   "journeys": []
