@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('pokemon/{pokemon}/moves-by-type', [PokemonController::class, 'movesByType']);
 // Movimientos posibles (aprendibles) de un Pokémon base.
 Route::get('pokemon/{pokemon}/moves', [PokemonController::class, 'moves']);
+// Debilidades (×2) de un Pokémon, según la tabla de efectividad de su tipo.
+Route::get('pokemon/{pokemon}/weaknesses', [PokemonController::class, 'weaknesses']);
 // Movimientos equipados de una instancia capturada.
 Route::get('my-pokemon/{myPokemon}/moves', [MyPokemonController::class, 'moves']);
 // Pokémon (especies) que comparten un mismo movimiento.
