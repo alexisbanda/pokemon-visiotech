@@ -124,7 +124,7 @@ se note en el código, no solo en el papel):
   `if/else` ni strings sueltos; incluye las 8 inmunidades (×0) verificadas contra
   el enunciado.
 - **Capas HTTP delgadas.** Controllers finos → la lógica vive en servicios
-  (`BattleService`). La **validación** se delega a *Form Requests* (8) y la
+  (`BattleService`). La **validación** se delega a *Form Requests* (9) y la
   **serialización** a *API Resources* (5): nunca se devuelven modelos Eloquent
   crudos. La semántica HTTP es explícita (201/204/404/422 y **409** al intentar un
   turno en un combate ya terminado).
@@ -153,7 +153,7 @@ probar en `docs/api.http` (extensión REST Client de VSCode).
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| `GET/POST` | `/pokemon` | Listar / crear Pokémon base |
+| `GET/POST` | `/pokemon` | Listar (filtro opcional `?type=<tipo>`) / crear Pokémon base |
 | `GET/PUT/PATCH/DELETE` | `/pokemon/{id}` | Ver / actualizar / borrar |
 | `GET/POST` | `/moves` | Listar / crear movimientos |
 | `GET/PUT/PATCH/DELETE` | `/moves/{id}` | Ver / actualizar / borrar |
