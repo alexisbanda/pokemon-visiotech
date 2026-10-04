@@ -201,4 +201,22 @@ final class TypeChart
     {
         return self::chart()[$attack->value][$defense->value] ?? self::NEUTRAL;
     }
+
+    /**
+     * Tipos atacantes que son súper eficaces (×2) contra el tipo defensor dado,
+     * ordenados alfabéticamente por su valor.
+     *
+     * @return list<PokemonType>
+     */
+    public static function weaknessesOf(PokemonType $defense): array
+    {
+        $weaknesses = array_values(array_filter(
+            PokemonType::cases(),
+            fn (PokemonType $attack): bool => self::multiplier($attack, $defense) === self::SUPER_EFFECTIVE,
+        ));
+
+        usort($weaknesses, fn (PokemonType $a, PokemonType $b): int => $a->value <=> $b->value);
+
+        return $weaknesses;
+    }
 }

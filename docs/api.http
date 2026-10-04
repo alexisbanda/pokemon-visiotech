@@ -125,6 +125,10 @@ Accept: {{json}}
 GET {{baseUrl}}/my-pokemon/3/moves
 Accept: {{json}}
 
+### (extra) Debilidades (×2) de un Pokémon, según su tipo
+GET {{baseUrl}}/pokemon/1/weaknesses
+Accept: {{json}}
+
 
 # ────────────────────────────────────────────────────────────────
 # PARTE 3 — COMBATE

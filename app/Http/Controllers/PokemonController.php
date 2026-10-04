@@ -9,6 +9,7 @@ use App\Http\Requests\StorePokemonRequest;
 use App\Http\Requests\UpdatePokemonRequest;
 use App\Http\Resources\MoveResource;
 use App\Http\Resources\PokemonResource;
+use App\Http\Resources\PokemonWeaknessesResource;
 use App\Models\Move;
 use App\Models\Pokemon;
 use Illuminate\Http\JsonResponse;
@@ -73,5 +74,13 @@ class PokemonController extends Controller
         return MoveResource::collection(
             Move::query()->where('type', $pokemon->type)->orderBy('name')->get(),
         );
+    }
+
+    /**
+     * Debilidades (×2) del Pokémon según la tabla de efectividad de tipos.
+     */
+    public function weaknesses(Pokemon $pokemon): PokemonWeaknessesResource
+    {
+        return PokemonWeaknessesResource::make($pokemon);
     }
 }
