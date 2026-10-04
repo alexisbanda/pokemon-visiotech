@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/alexisbanda/agent-playbook/main/config/agent-playbook.schema.json",
+  "version": 1,
+  "profile": "reduced",
+  "tracker": {
+    "type": "github",
+    "github": {
+      "repo": "alexisbanda/pokemon-visiotech",
+      "in_progress_label": "in-progress"
+    }
+  },
+  "hooks": {
+    "mode": "warn"
+  },
+  "review_bot": {
+    "enabled": false
+  },
+  "environment": {
+    "dev_url": "",
+    "test_command": "php artisan test",
+    "deploy_check": ""
+  },
+  "journeys": []
+}
