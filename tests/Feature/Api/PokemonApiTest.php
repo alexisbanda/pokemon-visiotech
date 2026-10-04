@@ -23,6 +23,50 @@ final class PokemonApiTest extends TestCase
             ->assertJsonStructure(['data' => [['id', 'name', 'type', 'stats' => ['hp', 'attack', 'speed']]]]);
     }
 
+    public function test_index_filters_by_type_ordered_by_name_and_keeps_query_string(): void
+    {
+        foreach (['Vulpix', 'Arcanine', 'Charmander'] as $name) {
+            Pokemon::factory()->create(['name' => $name, 'type' => 'fire']);
+        }
+        Pokemon::factory()->create(['name' => 'Squirtle', 'type' => 'water']);
+        Pokemon::factory()->create(['name' => 'Bulbasaur', 'type' => 'grass']);
+
+        $response = $this->getJson('/api/pokemon?type=fire')
+            ->assertOk()
+            ->assertJsonStructure(['data', 'links', 'meta'])
+            ->assertJsonCount(3, 'data')
+            ->assertJsonPath('meta.total', 3);
+
+        $this->assertSame(['Arcanine', 'Charmander', 'Vulpix'], array_column($response->json('data'), 'name'));
+        $this->assertSame(['fire'], array_unique(array_column($response->json('data'), 'type')));
+        $this->assertStringContainsString('type=fire', $response->json('links.first'));
+    }
+
+    public function test_index_without_type_returns_all_types(): void
+    {
+        Pokemon::factory()->create(['type' => 'fire']);
+        Pokemon::factory()->create(['type' => 'water']);
+        Pokemon::factory()->create(['type' => 'grass']);
+
+        $this->getJson('/api/pokemon')
+            ->assertOk()
+            ->assertJsonCount(3, 'data');
+    }
+
+    public function test_index_rejects_unknown_type(): void
+    {
+        $this->getJson('/api/pokemon?type=banana')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['type']);
+    }
+
+    public function test_index_type_filter_is_case_sensitive(): void
+    {
+        $this->getJson('/api/pokemon?type=Fire')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['type']);
+    }
+
     public function test_store_creates_pokemon_and_returns_201(): void
     {
         $payload = [

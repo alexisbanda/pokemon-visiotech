@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\IndexPokemonRequest;
 use App\Http\Requests\StorePokemonRequest;
 use App\Http\Requests\UpdatePokemonRequest;
 use App\Http\Resources\MoveResource;
@@ -16,9 +17,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 class PokemonController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    public function index(IndexPokemonRequest $request): AnonymousResourceCollection
     {
-        return PokemonResource::collection(Pokemon::query()->orderBy('name')->paginate());
+        return PokemonResource::collection(
+            Pokemon::query()
+                ->when($request->validated('type'), fn ($query, string $type) => $query->where('type', $type))
+                ->orderBy('name')
+                ->paginate()
+                ->withQueryString(),
+        );
     }
 
     public function store(StorePokemonRequest $request): JsonResponse

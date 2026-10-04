@@ -19,6 +19,10 @@
 GET {{baseUrl}}/pokemon
 Accept: {{json}}
 
+### Listar Pokémon filtrando por tipo (minúsculas; tipo inexistente → 422)
+GET {{baseUrl}}/pokemon?type=fire
+Accept: {{json}}
+
 ### Ver un Pokémon (con sus movimientos posibles)
 GET {{baseUrl}}/pokemon/1
 Accept: {{json}}
