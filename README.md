@@ -153,6 +153,7 @@ probar en `docs/api.http` (extensión REST Client de VSCode).
 
 | Método | Ruta | Descripción |
 |---|---|---|
+| `GET` | `/types` | Listar los 18 tipos de Pokémon (orden de declaración del enum) |
 | `GET/POST` | `/pokemon` | Listar (filtro opcional `?type=<tipo>`) / crear Pokémon base |
 | `GET/PUT/PATCH/DELETE` | `/pokemon/{id}` | Ver / actualizar / borrar |
 | `GET/POST` | `/moves` | Listar / crear movimientos |

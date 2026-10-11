@@ -15,6 +15,10 @@
 # PARTE 2 — POKÉDEX
 # ────────────────────────────────────────────────────────────────
 
+### Listar los 18 tipos de Pokémon (en su orden de declaración)
+GET {{baseUrl}}/types
+Accept: {{json}}
+
 ### Listar Pokémon (paginado)
 GET {{baseUrl}}/pokemon
 Accept: {{json}}
