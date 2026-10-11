@@ -169,6 +169,7 @@ probar en `docs/api.http` (extensión REST Client de VSCode).
 | 3 — Pokémon que **comparten** un movimiento | `GET /moves/{id}/pokemon` |
 | _(extra)_ Movimientos **equipados** de una instancia | `GET /my-pokemon/{id}/moves` |
 | _(extra)_ Debilidades (×2) de un Pokémon según su tipo | `GET /pokemon/{id}/weaknesses` |
+| _(extra)_ Historial de combates de una instancia (+ resumen wins/losses) | `GET /my-pokemon/{id}/battles` |
 
 ### Combate (Parte 3)
 

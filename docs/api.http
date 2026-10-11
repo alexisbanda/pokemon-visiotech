@@ -129,6 +129,10 @@ Accept: {{json}}
 GET {{baseUrl}}/pokemon/1/weaknesses
 Accept: {{json}}
 
+### (extra) Historial de combates de una instancia (como first o second) + resumen wins/losses
+GET {{baseUrl}}/my-pokemon/3/battles
+Accept: {{json}}
+
 
 # ────────────────────────────────────────────────────────────────
 # PARTE 3 — COMBATE
