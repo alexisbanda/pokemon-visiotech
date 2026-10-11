@@ -271,8 +271,9 @@ Cada pull request y cada push a `main` disparan el workflow
 [`.github/workflows/tests.yml`](.github/workflows/tests.yml), que corre
 `php artisan test` contra MySQL 8.4 con PHP 8.5 (las mismas versiones que usa
 Sail en local). El resultado aparece como el check **tests** al pie de la
-pestaña "Conversation" del PR y en la pestaña "Checks"; un fallo ahí bloquea
-visualmente el merge aunque no toque código de la app.
+pestaña "Conversation" del PR y en la pestaña "Checks"; si un test falla, el
+check sale en rojo en el PR. El repositorio no tiene protección de rama, así
+que un check en rojo no impide mergear: hay que mirarlo antes.
 
 ---
 
