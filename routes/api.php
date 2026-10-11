@@ -17,6 +17,8 @@ Route::get('pokemon/{pokemon}/moves', [PokemonController::class, 'moves']);
 Route::get('pokemon/{pokemon}/weaknesses', [PokemonController::class, 'weaknesses']);
 // Movimientos equipados de una instancia capturada.
 Route::get('my-pokemon/{myPokemon}/moves', [MyPokemonController::class, 'moves']);
+// Historial de combates (como first o second) de una instancia, con resumen de victorias/derrotas.
+Route::get('my-pokemon/{myPokemon}/battles', [MyPokemonController::class, 'battles']);
 // Pokémon (especies) que comparten un mismo movimiento.
 Route::get('moves/{move}/pokemon', [MoveController::class, 'pokemon']);
 

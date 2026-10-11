@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\BattleSide;
 use App\Enums\BattleStatus;
 use Database\Factories\BattleFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -77,6 +78,19 @@ class Battle extends Model
     public function isFinished(): bool
     {
         return $this->status === BattleStatus::Finished;
+    }
+
+    /**
+     * Combates en los que participó el MyPokemon dado, como first o como second.
+     *
+     * @param  Builder<Battle>  $query
+     */
+    public function scopeInvolving(Builder $query, int $myPokemonId): void
+    {
+        $query->where(function (Builder $query) use ($myPokemonId): void {
+            $query->where('first_my_pokemon_id', $myPokemonId)
+                ->orWhere('second_my_pokemon_id', $myPokemonId);
+        });
     }
 
     /**

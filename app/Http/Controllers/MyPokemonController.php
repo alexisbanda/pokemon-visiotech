@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\BattleStatus;
 use App\Http\Requests\StoreMyPokemonRequest;
 use App\Http\Requests\UpdateMyPokemonRequest;
 use App\Http\Resources\MoveResource;
+use App\Http\Resources\MyPokemonBattleResource;
 use App\Http\Resources\MyPokemonResource;
+use App\Models\Battle;
 use App\Models\MyPokemon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -61,5 +64,33 @@ class MyPokemonController extends Controller
     public function moves(MyPokemon $myPokemon): AnonymousResourceCollection
     {
         return MoveResource::collection($myPokemon->moves()->orderBy('name')->get());
+    }
+
+    /**
+     * Consulta: historial de combates de un MyPokemon (como first o como second),
+     * con resumen de victorias/derrotas sobre la totalidad del historial.
+     */
+    public function battles(MyPokemon $myPokemon): AnonymousResourceCollection
+    {
+        $battles = Battle::query()
+            ->involving($myPokemon->id)
+            ->with(['firstMyPokemon.pokemon', 'secondMyPokemon.pokemon'])
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate();
+
+        $finished = Battle::query()
+            ->involving($myPokemon->id)
+            ->where('status', BattleStatus::Finished)
+            ->get(['winner_my_pokemon_id']);
+        $wins = $finished->where('winner_my_pokemon_id', $myPokemon->id)->count();
+        $losses = $finished->count() - $wins;
+
+        $resources = MyPokemonBattleResource::collection($battles);
+        $resources->collection->each(
+            fn (MyPokemonBattleResource $resource) => $resource->forMyPokemon($myPokemon->id),
+        );
+
+        return $resources->additional(['summary' => ['wins' => $wins, 'losses' => $losses]]);
     }
 }
