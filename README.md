@@ -255,13 +255,25 @@ sail artisan battle:simulate 3 1 --interactive
 ## Tests
 
 ```bash
-sail test            # 49 tests · Unit (dominio) + Feature (API y combate)
+sail test            # Unit (dominio) + Feature (API y combate)
 ```
 
 - **Unit** (`tests/Unit/Domain/Combat`): tabla de efectividad y fórmula de daño,
   deterministas con `FixedRandomFactor`.
 - **Feature** (`tests/Feature`): CRUD y consultas de la Pokédex, y combate
   (orden por velocidad, fin por PS ≤ 0, transiciones inválidas 409/422).
+
+---
+
+## CI
+
+Cada pull request y cada push a `main` disparan el workflow
+[`.github/workflows/tests.yml`](.github/workflows/tests.yml), que corre
+`php artisan test` contra MySQL 8.4 con PHP 8.5 (las mismas versiones que usa
+Sail en local). El resultado aparece como el check **tests** al pie de la
+pestaña "Conversation" del PR y en la pestaña "Checks"; si un test falla, el
+check sale en rojo en el PR. El repositorio no tiene protección de rama, así
+que un check en rojo no impide mergear: hay que mirarlo antes.
 
 ---
 
