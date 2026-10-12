@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api;
 
-use App\Domain\Combat\PokemonType;
 use Tests\TestCase;
 
 final class TypeApiTest extends TestCase
 {
     public function test_index_lists_the_18_types_in_declaration_order(): void
     {
-        $expected = array_map(fn (PokemonType $case): string => $case->value, PokemonType::cases());
+        $expected = [
+            'normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting',
+            'poison', 'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost',
+            'dragon', 'dark', 'steel', 'fairy',
+        ];
 
         $response = $this->getJson('/api/types')
             ->assertOk()
