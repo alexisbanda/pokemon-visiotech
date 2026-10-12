@@ -6,7 +6,11 @@ use App\Http\Controllers\BattleController;
 use App\Http\Controllers\MoveController;
 use App\Http\Controllers\MyPokemonController;
 use App\Http\Controllers\PokemonController;
+use App\Http\Controllers\TypeController;
 use Illuminate\Support\Facades\Route;
+
+// Lista los 18 tipos de Pokémon, en su orden de declaración en el enum.
+Route::get('types', [TypeController::class, 'index']);
 
 // --- Consultas relacionales (Parte 2) ---
 // Movimientos cuyo tipo coincide con el del Pokémon (relación movimientos→tipo→Pokémon).
